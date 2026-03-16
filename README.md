@@ -25,9 +25,23 @@ It wrote the code, ran away, and now the game is unplayable.
 
 ## 📝 Document Your Experience
 
-- [ ] Describe the game's purpose.
-- [ ] Detail which bugs you found.
-- [ ] Explain what fixes you applied.
+- [x] **Game Purpose**: This is a number guessing game where players try to guess a secret number within a limited number of attempts. Players receive hints ("Too High" or "Too Low") to guide their guesses, and earn points based on how quickly they find the correct number. The game has three difficulty levels (Easy, Normal, Hard) with different number ranges and attempt limits.
+
+- [x] **Bugs Found**:
+  1. **Reversed Hints Bug** (app.py:38-40): The hint logic was backwards - when guess > secret, it said "Go HIGHER!" instead of "Go LOWER!"
+  2. **Secret Type Switching Bug** (app.py:158-161): On even-numbered attempts, the secret was converted to a string, breaking numeric comparisons
+  3. **Hard Mode Range Bug** (app.py:10): Hard difficulty had range 1-50 while Normal had 1-100, making Hard easier
+  4. **Score Logic Bug** (app.py:58-60): "Too High" outcome randomly added or subtracted points based on attempt parity
+  5. **New Game Reset Bug** (app.py:135-138): New Game button didn't reset all state properly and used hardcoded range
+
+- [x] **Fixes Applied**:
+  1. Refactored all game logic functions from app.py to logic_utils.py for better separation of concerns
+  2. Corrected hint messages so "Too High" says "Go LOWER!" and "Too Low" says "Go HIGHER!"
+  3. Removed the type-switching logic that converted secret to string on even attempts
+  4. Changed Hard mode range to 1-200 to make it genuinely harder than Normal mode
+  5. Simplified score logic so wrong guesses consistently subtract 5 points
+  6. Fixed New Game button to properly reset all session state and use the correct difficulty range
+  7. Created comprehensive pytest test suite with 12 tests covering all core functions and edge cases
 
 ## 📸 Demo
 
