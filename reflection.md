@@ -4,48 +4,28 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 
 ## 1. What was broken when you started?
 
-When I first analyzed the game, I identified several critical bugs by reading through the code:
-
-1. **Reversed Hints Bug**: In app.py:38-40, the hint logic is backwards. When `guess > secret`, the code says "Go HIGHER!" but it should say "Go LOWER!". Similarly, when `guess < secret`, it says "Go LOWER!" when it should say "Go HIGHER!". This makes the game nearly impossible to win.
-
-2. **Secret Type Switching Bug**: In app.py:158-161, on even-numbered attempts, the secret number is converted to a string (`secret = str(st.session_state.secret)`). This breaks integer comparisons and causes the check_guess function to use string comparison logic instead of numeric logic, leading to incorrect and confusing behavior.
-
-3. **Hard Mode Range Bug**: In app.py:10, Hard difficulty returns range (1, 50) while Normal returns (1, 100). This makes Hard mode easier than Normal mode, which is backwards. Hard difficulty should have a wider range to make it more challenging.
-
-4. **Score Logic Bug**: In app.py:58-60, when the outcome is "Too High", the game adds 5 points if the attempt number is even and subtracts 5 points if odd. This random scoring behavior doesn't make sense - wrong guesses should consistently penalize the player.
+When I started, the game had multiple bugs that made the experience unreliable. The most obvious one was the hint logic: a guess above the secret could tell the player to go higher, and a guess below the secret could tell the player to go lower. I also found a type bug where the secret number was sometimes converted to a string, which broke normal number comparisons. On top of that, Hard mode used a smaller range than Normal mode, and the score logic behaved inconsistently for wrong guesses.
 
 ---
 
 ## 2. How did you use AI as a teammate?
 
-I used Claude Code (an AI-powered CLI tool) for this project. I treated the AI as a pair programming partner, carefully reviewing each suggestion rather than blindly accepting code.
-
-**Example of a correct AI suggestion**: When refactoring the check_guess function to logic_utils.py, the AI correctly identified that the hint logic was reversed (lines 38-40 in the original app.py). When `guess > secret`, it said "Go HIGHER!" instead of "Go LOWER!". I verified this was correct by tracing through the logic manually - if I guess 60 and the secret is 50, my guess is too high, so I should go lower. The fix was confirmed by running pytest tests that specifically check the hint messages match the outcomes.
-
-**Example of an incorrect/misleading initial approach**: My first instinct was to try running the Streamlit app interactively to find bugs through gameplay. However, this would have been time-consuming and might have missed subtle bugs. Instead, I used code analysis to identify all bugs systematically by reading through the logic. This was more efficient and comprehensive - I found the secret type-switching bug (lines 158-161) that only occurs on even-numbered attempts, which I might have missed through random gameplay testing.
+I used AI as a pair-programming teammate for both diagnosis and cleanup, but I did not trust suggestions automatically. One correct suggestion was to move reusable logic into `logic_utils.py` so the hint, scoring, and parsing behavior could be tested in isolation. I verified that approach by running `pytest` after the refactor and making sure the imports and helper behavior still worked. One misleading direction was assuming the existing comments meant the app was already correct; the tests showed that import and behavior problems still existed, so I had to verify everything with actual execution instead of trusting the comments.
 
 ---
 
 ## 3. Debugging and testing your fixes
 
-I decided a bug was fixed by using a two-step verification process: first, I manually traced through the logic to understand why the fix should work, and second, I wrote automated pytest tests to verify the behavior programmatically. This combination gave me high confidence the fixes were correct.
-
-**Key test example**: For the reversed hints bug, I wrote `test_guess_too_high()` which checks that when `guess=60` and `secret=50`, the outcome is "Too High" AND the message contains "LOWER". This test would have failed before my fix (since the original message said "HIGHER"), but now passes, confirming the logic reversal was corrected. I also created a comprehensive test suite with 12 tests covering edge cases like decimal inputs, empty strings, and boundary values to ensure robustness.
-
-The AI helped me design comprehensive tests by suggesting I test not just the outcome but also verify the hint messages contain the correct directional advice ("HIGHER" vs "LOWER"). This caught a potential issue where I could have fixed the outcome but left the message wrong. The AI also helped me think about edge cases like testing that Hard difficulty is genuinely harder than Normal by asserting `hard_high > normal_high` in the test.
+I treated each bug as fixed only after I could explain the logic change and confirm it with tests. The main verification step was running `pytest` against the helper functions in `logic_utils.py`, especially the tests for reversed hints, valid and invalid parsing, difficulty ranges, and score updates. I also used `python -m py_compile app.py logic_utils.py tests/test_game_logic.py` to confirm the files were syntactically clean. A helpful example was `test_guess_too_high()`, which verifies that guessing `60` against a secret of `50` returns `Too High` and tells the player to go lower.
 
 ---
 
 ## 4. What did you learn about Streamlit and state?
 
-Streamlit "reruns" the entire Python script from top to bottom every time a user interacts with the app (like clicking a button or typing input). This is different from traditional web apps where only parts of the page update. To remember information between reruns (like the secret number, score, or attempt count), Streamlit provides `st.session_state` - a dictionary-like object that persists data across reruns. Without session state, the secret number would regenerate on every button click, making the game impossible to play! This is why the "New Game" button bug was critical - it wasn't properly resetting all session state variables, causing the game to behave inconsistently when starting a new game.
+I learned that Streamlit reruns the script from top to bottom on every interaction, so state management has to be explicit. `st.session_state` is what keeps the secret number, attempt count, score, and history from disappearing on each rerun. That also means reset behavior matters a lot, because stale values can leak into a new round if the reset path misses a field. In this project, I had to make sure both the New Game button and difficulty changes rebuilt the game state cleanly.
 
 ---
 
 ## 5. Looking ahead: your developer habits
 
-**Habit to reuse**: I want to continue the practice of adding inline code comments that mark where bugs were fixed (using `# FIXME:` and `# FIX:` comments). This creates a clear audit trail showing what was wrong and how it was corrected, which is valuable for code reviews and future maintenance. It also helps me think critically about whether I truly understand what I'm fixing versus just applying changes blindly.
-
-**What I'd do differently**: Next time, I would run the existing pytest tests BEFORE making any changes to establish a baseline of what's passing vs failing. In this project, I jumped straight to code analysis and fixes, but running tests first would have given me immediate feedback about which functions were already broken, potentially saving time and providing a clearer starting point.
-
-**How this changed my thinking about AI-generated code**: This project reinforced that AI-generated code should always be treated as a first draft that requires critical human review, not a finished product. The bugs were subtle but logical - reversed conditionals, type mismatches, and inconsistent scoring - exactly the kinds of errors a human would make when writing quickly without careful testing. AI is a powerful accelerator for development, but human judgment is essential for verification and quality control.
+One habit I want to keep is marking suspicious logic with short `# FIXME` and `# FIX` comments while debugging, because it makes the reasoning visible and easier to review later. Next time, I would run the test suite immediately before touching any code so I have a clear baseline instead of relying on comments or assumptions. This project also reinforced that AI-generated code is useful as a draft, not as proof of correctness. The real work is still in reviewing the logic, writing tests, and confirming the behavior yourself.

@@ -4,6 +4,16 @@ from logic_utils import get_range_for_difficulty, parse_guess, check_guess, upda
 
 # FIX: Refactored all game logic functions to logic_utils.py for better code organization
 
+
+def reset_game_state(low_bound: int, high_bound: int, difficulty_name: str) -> None:
+    """Reset session state for a fresh game in the selected difficulty."""
+    st.session_state.secret = random.randint(low_bound, high_bound)
+    st.session_state.attempts = 0
+    st.session_state.score = 0
+    st.session_state.status = "playing"
+    st.session_state.history = []
+    st.session_state.active_difficulty = difficulty_name
+
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
 st.title("🎮 Game Glitch Investigator")
@@ -33,7 +43,7 @@ if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
 if "attempts" not in st.session_state:
-    st.session_state.attempts = 1
+    st.session_state.attempts = 0
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -44,10 +54,18 @@ if "status" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
+if "active_difficulty" not in st.session_state:
+    st.session_state.active_difficulty = difficulty
+
+if st.session_state.active_difficulty != difficulty:
+    # FIXME: Difficulty changes used to keep the old secret and stale counters.
+    # FIX: Reset the game when the player switches difficulty levels.
+    reset_game_state(low, high, difficulty)
+
 st.subheader("Make a guess")
 
 st.info(
-    f"Guess a number between 1 and 100. "
+    f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
@@ -73,11 +91,7 @@ with col3:
 
 if new_game:
     # FIX: Reset all game state properly and use correct range for difficulty
-    st.session_state.attempts = 1  # FIXED: Was 0, should start at 1
-    st.session_state.secret = random.randint(low, high)  # FIXED: Now uses difficulty range
-    st.session_state.score = 0
-    st.session_state.status = "playing"
-    st.session_state.history = []
+    reset_game_state(low, high, difficulty)
     st.success("New game started.")
     st.rerun()
 
@@ -89,14 +103,13 @@ if st.session_state.status != "playing":
     st.stop()
 
 if submit:
-    st.session_state.attempts += 1
-
     ok, guess_int, err = parse_guess(raw_guess)
 
     if not ok:
         st.session_state.history.append(raw_guess)
         st.error(err)
     else:
+        st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
 
         # FIXME: Secret type switching bug - this breaks comparisons on even attempts

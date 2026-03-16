@@ -1,52 +1,28 @@
-# 🎮 Game Glitch Investigator: The Impossible Guesser
+# Game Glitch Investigator
 
-## 🚨 The Situation
+## Setup
 
-You asked an AI to build a simple "Number Guessing Game" using Streamlit.
-It wrote the code, ran away, and now the game is unplayable. 
+1. Install dependencies with `pip install -r requirements.txt`.
+2. Start the app with `python -m streamlit run app.py`.
+3. Run the automated checks with `pytest`.
 
-- You can't win.
-- The hints lie to you.
-- The secret number seems to have commitment issues.
+## Demo
 
-## 🛠️ Setup
+The repaired app is a Streamlit number guessing game with three difficulty levels, score tracking, and consistent high/low hints. The game now keeps the correct secret number for the selected difficulty, resets cleanly on a new game, and only counts valid guesses toward the attempt limit.
 
-1. Install dependencies: `pip install -r requirements.txt`
-2. Run the broken app: `python -m streamlit run app.py`
+Add a screenshot of a winning run here before submission. The assignment expects a real screenshot, so this section still needs that manual capture.
 
-## 🕵️‍♂️ Your Mission
+## Document Your Experience
 
-1. **Play the game.** Open the "Developer Debug Info" tab in the app to see the secret number. Try to win.
-2. **Find the State Bug.** Why does the secret number change every time you click "Submit"? Ask ChatGPT: *"How do I keep a variable from resetting in Streamlit when I click a button?"*
-3. **Fix the Logic.** The hints ("Higher/Lower") are wrong. Fix them.
-4. **Refactor & Test.** - Move the logic into `logic_utils.py`.
-   - Run `pytest` in your terminal.
-   - Keep fixing until all tests pass!
+This project started with several logic and state bugs that made the game unreliable. I used AI as a debugging partner, but I verified each change by reading the code, running `pytest`, and checking the app behavior against the assignment goals.
 
-## 📝 Document Your Experience
+Key fixes included moving core logic into `logic_utils.py`, correcting the reversed hint messages, removing the secret-number type mismatch bug, fixing the hard difficulty range, and making the score logic consistent. I also tightened the Streamlit state flow so switching difficulty or starting a new game fully resets the session with the correct range.
 
-- [x] **Game Purpose**: This is a number guessing game where players try to guess a secret number within a limited number of attempts. Players receive hints ("Too High" or "Too Low") to guide their guesses, and earn points based on how quickly they find the correct number. The game has three difficulty levels (Easy, Normal, Hard) with different number ranges and attempt limits.
+Testing now covers the core helper functions in `logic_utils.py`, including win detection, high/low hints, parsing valid and invalid guesses, difficulty ranges, and scoring behavior. This gives a reproducible way to verify the repairs instead of relying only on manual playthroughs.
 
-- [x] **Bugs Found**:
-  1. **Reversed Hints Bug** (app.py:38-40): The hint logic was backwards - when guess > secret, it said "Go HIGHER!" instead of "Go LOWER!"
-  2. **Secret Type Switching Bug** (app.py:158-161): On even-numbered attempts, the secret was converted to a string, breaking numeric comparisons
-  3. **Hard Mode Range Bug** (app.py:10): Hard difficulty had range 1-50 while Normal had 1-100, making Hard easier
-  4. **Score Logic Bug** (app.py:58-60): "Too High" outcome randomly added or subtracted points based on attempt parity
-  5. **New Game Reset Bug** (app.py:135-138): New Game button didn't reset all state properly and used hardcoded range
+## Files
 
-- [x] **Fixes Applied**:
-  1. Refactored all game logic functions from app.py to logic_utils.py for better separation of concerns
-  2. Corrected hint messages so "Too High" says "Go LOWER!" and "Too Low" says "Go HIGHER!"
-  3. Removed the type-switching logic that converted secret to string on even attempts
-  4. Changed Hard mode range to 1-200 to make it genuinely harder than Normal mode
-  5. Simplified score logic so wrong guesses consistently subtract 5 points
-  6. Fixed New Game button to properly reset all session state and use the correct difficulty range
-  7. Created comprehensive pytest test suite with 12 tests covering all core functions and edge cases
-
-## 📸 Demo
-
-- [ ] [Insert a screenshot of your fixed, winning game here]
-
-## 🚀 Stretch Features
-
-- [ ] [If you choose to complete Challenge 4, insert a screenshot of your Enhanced Game UI here]
+- `app.py`: Streamlit UI and session-state management.
+- `logic_utils.py`: Game logic helpers for parsing, hinting, ranges, and scoring.
+- `tests/test_game_logic.py`: Pytest coverage for the repaired logic.
+- `reflection.md`: Written reflection for the assignment prompts.

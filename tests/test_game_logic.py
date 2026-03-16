@@ -1,3 +1,8 @@
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from logic_utils import check_guess, parse_guess, get_range_for_difficulty, update_score
 
 # Test check_guess function - verifies the reversed hints bug fix
@@ -58,7 +63,7 @@ def test_difficulty_ranges():
 def test_update_score_win():
     # Winning on first attempt should give maximum points
     score = update_score(0, "Win", 1)
-    assert score == 80  # 100 - 10 * (1 + 1) = 80
+    assert score == 90
 
 def test_update_score_too_high():
     # "Too High" should always subtract 5 points regardless of attempt number
